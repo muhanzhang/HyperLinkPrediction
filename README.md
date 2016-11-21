@@ -6,6 +6,11 @@ Please first install libFM, which can be downloaded from http://www.libfm.org. T
 
 Run Meta_RecoverS.m in MATLAB for doing the metabolic reaction prediction experiments.
 
+For a bioinformatics-specific version of code, please refer to https://github.com/Tolutola/BoostGAPFILL#boostgapfill. And the paper is:
+
+Oyetunde, Tolutola, Muhan Zhang, Yixin Chen, Yinjie Tang, and Cynthia Lo. "BoostGAPFILL: Improving the fidelity of metabolic network reconstructions through integrated constraint and pattern-based methods." Bioinformatics (2016): btw684.
+
+
 Muhan Zhang, Washington University in St. Louis
 11/21/2016
 
