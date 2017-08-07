@@ -5,11 +5,8 @@ function [RC] = FMconvert(train,libfmname)
 %%
 datapath = strcat(pwd,'/data/');       % path of the data folder
 train = triu(train);
-[r,c,v] = find(train);  % store row, col, value of train>0 data to libfmname, for further processing using python
-% [r,c] = ind2sub(size(train),[1:numel(train)]);
-% r = r'; c = c';
-% v = train(:);
-
+%[r,c,v] = find(train);  % store row, col, value of train>0 data to libfmname, for further processing using python
+[r,c] = ind2sub(size(train),[1:prod(size(train))]);
 RC = [r,c];
 a = [v,r-1,c-1];
 

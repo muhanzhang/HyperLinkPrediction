@@ -3,9 +3,6 @@
 %  *author: Muhan Zhang, Washington University in St. Louis
 %% load a metabolic model
 clear all;
-
-addpath(genpath('symnmf-master'));
-
 mo = 1;
 for mo = 1:1
     mo
@@ -17,9 +14,7 @@ switch mo
         validnumber = 50;
     case 2
         model = 'iAF1260b';
-        %Testnumber = 50:50:400;
-        Testnumber = 400;
-        validnumber = 50;
+        Testnumber = 50:50:400;
     case 3
         model = 'e_coli_core';
         Testnumber = 40;
@@ -90,12 +85,10 @@ for change_testnumber = 1:num_test
         trainnames = R(perm(testnumber+1:end));
         
 
-        %validr = trainr(:,1:validnumber);
-        %validnames = trainnames(1:validnumber);
-        validr = testr;
-        validnames = testnames;
-%         trainnames(1:validnumber) = [];
-%         trainr(:,1:validnumber) = [];
+        validr = trainr(:,1:validnumber);
+        validnames = trainnames(1:validnumber);
+        trainnames(1:validnumber) = [];
+        trainr(:,1:validnumber) = [];
         tmp = strcmp(repmat(trainnames,1,size(unrnames,2)),repmat(unrnames,size(trainnames,1),1));  %compare train with unr, save to a matrix
         check_repeat = find(sum(tmp)==0);     %keep those unr which never appears in the train reactions
         unrepeat_US = US(:,check_repeat);     %the unrepeated US, which excludes the train reactions
@@ -103,8 +96,8 @@ for change_testnumber = 1:num_test
         unrepeat_unrnames = unrnames(1,check_repeat);
         
         MUnames = unrepeat_unrnames;
-         valmatch = strcmp(repmat(validnames,1,size(MUnames,2)),repmat(MUnames,size(validnames,1),1));
-         valmatch = full(spones(sum(valmatch,1)));
+        valmatch = strcmp(repmat(validnames,1,size(MUnames,2)),repmat(MUnames,size(validnames,1),1));
+        valmatch = full(spones(sum(valmatch,1)));
         
         % METHOD
         match_all = strcmp(repmat(testnames,1,size(unrepeat_unrnames,2)),repmat(unrepeat_unrnames,size(testnames,1),1));

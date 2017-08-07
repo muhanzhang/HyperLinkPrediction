@@ -17,7 +17,7 @@ mask = spones(A)==0;
 %mask = logical(diag(ones(size(A,1),1)));
 [rr,cc] = size(hltest);
 max_iter = 100;
-k=30;
+k=50;
 
 % reshape the test hyperlinks
 U1 = [];
@@ -106,7 +106,7 @@ for iter = 1:max_iter
     if iter > 1
         [B0,I0] = sort(scores0,'descend');
         [B,I] = sort(scores,'descend');
-        C = setdiff(I0(1:num_prediction),I(1:num_prediction));
+        C = setdiff(I0[1:num_prediction],I[1:num_prediction]);
         size(C,1)
         %display 'pause'
     end
@@ -114,8 +114,6 @@ for iter = 1:max_iter
     wdA0 = wdA;
     scores0 = scores;
     nmatch0 = nmatch;
-    
-    %if abs(res-res1)
 %     if abs(res-oldres) < 1e-4
 %         cnt = cnt + 1;
 %     else

@@ -1,4 +1,4 @@
-function [I,scores,hlpredicted] = HLpredict(hltrain,hltest,num_prediction,method,ith_experiment,max_iter)
+function [I,scores,hlpredicted] = HLpredict(hltrain,hltest,num_prediction,method,ith_experiment,valmatch)
 %  Usage: for hyperlink predictions in hypernetworks, 
 %         call [I,scores] = HLpredict(hltrain,hltest,num_prediction) in default mode.
 %  --Input--
@@ -12,7 +12,7 @@ function [I,scores,hlpredicted] = HLpredict(hltrain,hltest,num_prediction,method
 %
 %  -ith_experiment: a positive integer number indicating you are running the ith experiment 
 %           (for parallelly running multiple experiments purpose, avoid file reading conflict)
-%  -max_iter: used specifically for 'MATBoost' alg, the maximum allowed number of iterations
+%  -validr: used specifically for 'MATBoost' alg, validation reactions
 %  --Output--
 %  -I: logical column indicator vector, I(i)==1 iff hltest(:,i) is predicted as positive (0 otherwise)
 %  -scores: the column vector of scores that are assigned to each test hyperlink, higher scores 
@@ -25,13 +25,8 @@ if nargin < 5
     ith_experiment = 1;
 end
 
-if nargin < 4
-    method = 'MATBoost';
-    max_iter = 10;
-end
-
 A = hltrain * hltrain';   % project the hyperlinks into the vertex space to form the adjacency matrix (with weights)
-A = A - diag(diag(A));   % remove self adjacency
+%A = A - diag(diag(A));   % remove self adjacency
 B = hltest * hltest';
 B = B - diag(diag(B));
 B = spones(B);    %the adjacency matrix of test hyperlinks, no use in hyperlink prediction, passed only for program consistency
@@ -39,7 +34,7 @@ k = 8;
 
 switch method
     case 'MATBoost'
-        [I,scores] = MATBoost(A,B,k,ith_experiment,hltest,num_prediction,max_iter);
+        [I,scores] = MATBoost(A,B,k,ith_experiment,hltest,num_prediction,valmatch);
     case 'CM'
         [I,scores] = MATBoost(A,B,k,ith_experiment,hltest,num_prediction,1);
     case 'Greedy'
