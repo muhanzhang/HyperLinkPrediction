@@ -34,9 +34,9 @@ k = 8;
 
 switch method
     case 'MATBoost'
-        [I,scores] = MATBoost(A,B,k,ith_experiment,hltest,num_prediction,valmatch);
+        [I,scores] = MATBoost2(A,B,k,ith_experiment,hltest,num_prediction,10);
     case 'CM'
-        [I,scores] = MATBoost(A,B,k,ith_experiment,hltest,num_prediction,1);
+        [I,scores] = MATBoost2(A,B,k,ith_experiment,hltest,num_prediction,1);
     case 'Greedy'
         [I,scores] = GreedyMatch(A,B,k,ith_experiment,hltest,num_prediction);
     case 'FM' 

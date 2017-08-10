@@ -5,6 +5,7 @@ function [Lambda,scores] = LR(hltrain,hltest,num_prediction)
 %
 %  *author: Muhan Zhang, Washington University in St. Louis
 %% 
+addpath(genpath('/project/tantra/mh/software/liblinear-2.1/matlab'))
 [row,col] = size(hltrain);
 [row,col2] = size(hltest);
 

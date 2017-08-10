@@ -3,6 +3,7 @@ function [Lambda,scores] = HPLSF(wtrain,test,k,ith_experiment,hltrain,hltest,num
 %
 %  *author: Muhan Zhang, Washington University in St. Louis
 %%
+addpath(genpath('/project/tantra/mh/LinkPrediction/software/liblinear-2.1/matlab'));
 [Feature,trainlabels,Feature1] = feature_extraction(hltrain,hltest,wtrain,test,k,ith_experiment);   % for using shortest distance matrix decompostion features as in the original paper
 
 X = [Feature;Feature1];

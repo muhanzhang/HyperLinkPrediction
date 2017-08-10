@@ -13,11 +13,12 @@ function [Lambda,scores] = MATBoost(A,test,k,ith_experiment,hltest,num_predictio
 %
 %  *author: Muhan Zhang, Washington University in St. Louis
 %%
+addpath(genpath('symnmf-master'));
 mask = spones(A)==0;
 %mask = logical(diag(ones(size(A,1),1)));
 [rr,cc] = size(hltest);
 max_iter = 100;
-k=30;
+k=10;
 
 % reshape the test hyperlinks
 U1 = [];
