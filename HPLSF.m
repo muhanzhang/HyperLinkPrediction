@@ -1,4 +1,4 @@
-function [Lambda,scores] = HPLSF(wtrain,test,k,ith_experiment,hltrain,hltest,num_prediction)
+function [Lambda,scores] = HPLSF(wtrain,k,ith_experiment,hltrain,hltest,num_prediction)
 %  Hyperlink Prediction using Latent Social Features, in "Hyperlink Prediction in Hypernetworks Using Latent Social Features".
 %
 %  *author: Muhan Zhang, Washington University in St. Louis

@@ -1,4 +1,4 @@
-function [Lambda,scores] = MATBoost(A,test,k,ith_experiment,hltest,num_prediction,valmatch)
+function [Lambda,scores] = MATBoost(hltrain,hltest,num_prediction,k,test_labels)
 %  Usage: the main program of the MATBoost algorithm for hyperlink prediction. We suggest to
 %         call MATBoost using HLpredict.m instead of directly calling this script.
 %  --Input--
@@ -13,127 +13,42 @@ function [Lambda,scores] = MATBoost(A,test,k,ith_experiment,hltest,num_predictio
 %
 %  *author: Muhan Zhang, Washington University in St. Louis
 %%
-mask = spones(A)==0;
-%mask = logical(diag(ones(size(A,1),1)));
-[rr,cc] = size(hltest);
-max_iter = 100;
-k=50;
+addpath(genpath('symnmf-master'));
 
-% reshape the test hyperlinks
-U1 = [];
-for i=1:cc
-    u = hltest(:,i);
-    u = u*u';  % do not remove self adjacency here, because self adjacency will be kept in wdA
-    u = sparse(u(:));    
-    U1 = [U1,u];
+if k == 'cv'
+    K = [10,20,30,50];
+    folds = 5;
+    ind = crossvalind('Kfold', size(hltrain,1), folds);
+    V = zeros(length(K),folds);
+    for i = 1:folds
+        hltest1 = [hltest, hltrain(:, ind==i)];
+        hltrain1 = hltrain;
+        hltrain1(:, ind==i) = [];
+        test_labels1 = [zeros(size(test_labels)), ones(1, nnz(ind==i))];
+        for j = 1:length(K)
+            k = K(j);
+            nmatch = optimize(hltrain1,hltest1,nnz(ind==i),k,test_labels1)
+            V(j,i) = nmatch;   % use match number as cv criterion
+        end
+    end
+    aV = mean(V,2);
+    [~,I] = max(aV);
+    k = K(I);
 end
 
-scores = zeros(cc,1);   %initialize scores
-%scores = rand(cc,1);   %initialize scores
-
-Lambda = zeros(cc,1);   %initialize scores
-DS = zeros(1,max_iter);  %record the ||newscores - scores||
-Scores = [];
-maxmatch = 0;
-minres = 1000000;
-cnt = 0;
-oldres = 100000;
-
-opt = statset('Maxiter',1000);
-params = {}
-params.maxiter = 100;
-params.debug = 0;
-Nmatch = [];
-
-for iter = 1:max_iter
-    if mod(iter,10)==0
-        iter
-    end
-    
-    % bias correction step
-    %Ak = A + (hltest*diag(scores)*hltest').*(~mask);
-    %Ak = A + (hltest*diag(Lambda)*hltest').*(~mask);
-    %Ak = A + (hltest*diag(Lambda)*hltest');
-    Ak = A + (hltest*diag(scores)*hltest');
-    
-    % completion step
-    %[~,~,wdA] = evalc('FM(Ak,test,k,ith_experiment);');
-    
-    % nnmf
-%     if iter == 1
-%         [W,H] = nnmf(Ak,k);
-%     else
-%         [W,H] = nnmf(Ak,k,'w0',W,'h0',H,'algorithm','mult','options',opt);
-%     end
-%     wdA = W*H;
-%     res1 = norm(Ak-wdA,'fro')^2
-    
-    % symnnmf
-    
-    if iter == 1
-        [H, ~, res1] = symnmf_newton(Ak, k,params);
-    else
-        params.Hinit = H;
-        [H, ~, res1] = symnmf_newton(Ak, k,params);
-    end
-    wdA = H*H';
-    res1
-    
-    
-    % matching step (ILSQ or Lasso, default ILSQ which is faster)
-    %newscores = ILSQ_Match(wdA,U1,num_prediction,rr,cc,mask);
 
 
 
-    [scores, res] = ILSQ_Match(wdA-A,U1,num_prediction,rr,cc,scores);
 
-    %newscores = Lasso_Match(wdA,U1,num_prediction,rr,cc,mask,0.1);
-    
-    % stop criterion
-    Lambda = zeros(cc,1);
-    [~,I] = sort(scores,1,'descend');
-    Lambda(I(1:num_prediction)) = 1;    % only keep hl with top scores
-    %Lambda = logical(Lambda);
-    nmatch = nnz(Lambda'.*valmatch)
-    Nmatch = [Nmatch, nmatch];
-%     
-%     if nmatch > maxmatch        % if stops because of stop criterion, calculate the mean scores before this iteration
-%         maxmatch = nmatch;
-%         scores = newscores;
-%     end
-    res
 
-    if iter > 1
-        [B0,I0] = sort(scores0,'descend');
-        [B,I] = sort(scores,'descend');
-        C = setdiff(I0[1:num_prediction],I[1:num_prediction]);
-        size(C,1)
-        %display 'pause'
-    end
-    H0 = H;
-    wdA0 = wdA;
-    scores0 = scores;
-    nmatch0 = nmatch;
-%     if abs(res-oldres) < 1e-4
-%         cnt = cnt + 1;
-%     else
-%         cnt = 0;
-%     end
-%     oldres = res;
-%   
-%     if cnt == 50
-%         break
-%     end
-    
-    
-%     if res<minres
-%         minres = res;
-%         scores = newscores;
-%     end
-end
-%scores = mean(Scores(:,1:max(end-1,1)),2);  % output the average scores
-%scores = Scores(:,end-1);  % output the last learned scores
+
+
 Nmatch
+
+[~,~,~,auc] = perfcurve(valmatch,scores,true);
+auc
+
+
 
 Lambda = zeros(cc,1);
 [~,I] = sort(scores,1,'descend');
@@ -143,4 +58,64 @@ if num_prediction > 1
 else
     Lambda(scores>num_prediction) = 1;
     Lambda = logical(Lambda);
+end
+
+end
+
+
+
+
+function nmatch = optimize(hltrain,hltest,num_prediction,k,test_labels)
+% reshape the test hyperlinks
+[rr,cc] = size(hltest);
+U1 = sparse(zeros(rr^2,cc));
+for i=1:cc
+    u = hltest(:,i);
+    u = u*u';
+    u = sparse(u(:));
+    U1(:,i) = u;
+end
+
+% optimization settings
+scores = zeros(cc,1);   %initialize scores
+opt = statset('Maxiter',1000);
+params = {}
+params.maxiter = 100;
+params.debug = 0;
+Nmatch = [];
+max_iter = 100;
+
+for iter = 1:max_iter
+    
+    old_res = res;
+    if mod(iter,10)==0
+        iter
+    end
+    Ak = A + (hltest*diag(scores)*hltest');
+    
+    % symnnmf
+    if iter == 1
+        [H, ~, res0] = symnmf_newton(Ak, k,params);
+    else
+        params.Hinit = H;
+        [H, ~, res0] = symnmf_newton(Ak, k,params);
+    end
+    wdA = H*H';
+    res0
+    
+    % integer least square matching
+    [scores, res] = ILSQ_Match(wdA-A,U1,num_prediction,rr,cc,scores);
+    res
+    
+    Lambda = zeros(cc,1);
+    [~,I] = sort(scores,1,'descend');
+    Lambda(I(1:num_prediction)) = 1;    % only keep hl with top scores
+    nmatch = nnz(Lambda'.*valmatch)
+    Nmatch = [Nmatch, nmatch];
+    
+    if abs(res-old_res) < 1e-5
+        break
+    end
+end
+return nmatch
 end

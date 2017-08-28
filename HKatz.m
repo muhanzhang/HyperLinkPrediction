@@ -59,7 +59,7 @@ for i = 1:cc
     r = hltest(:,i);
     rA = r*r';
     rA = rA - diag(diag(rA));
-    scores(i) = sum(sum(rA.*sim))/(nnz(r)*(nnz(r)-1)/2);
+    scores(i) = sum(sum(rA.*sim))/(nnz(r)*(nnz(r)-1)/2+1);
 end
 
 Lambda = zeros(cc,1);

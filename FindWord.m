@@ -76,8 +76,8 @@ classificationLayer];
 opts = trainingOptions('sgdm', 'InitialLearnRate', 0.1, 'MaxEpochs', 200, 'MiniBatchSize', 128, ...
     'LearnRateSchedule','piecewise', 'LearnRateDropFactor', 0.9, 'L2Regularization', 0, ...
     'ExecutionEnvironment', 'cpu');
-net = trainNetwork(reshape(S, 26, 1, 1, ss), categorical([ones(1, s), zeros(1, u)]), layers, opts);
-[~, scores] = classify(net, reshape(U, 26, 1, 1, u));
+net = trainNetwork(reshape(S, 26, 1, 1, ss), categorical([ones(1, s-nmissing), zeros(1, u)]), layers, opts);
+[~, scores] = classify(net, reshape(U, 26, 1, 1, u+nmissing));
 scores(:, 1) = [];
 Lambda = zeros(size(scores, 1), 1);
 [~,I] = sort(scores,1,'descend');

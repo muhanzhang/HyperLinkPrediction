@@ -24,8 +24,13 @@ opts = optimset('MaxFunEval',inf,'MaxIter',Inf,'display','on','algorithm','inter
 dA1 = dA(:);
 
 
-%scores = cplexlsqbilp(U1,dA1,[],[]);    %use mask
-[scores,resnorm] = lsqlin(U1,dA1,[],[],[],[],zeros(cc,1),ones(cc,1),l0,opts);    %solve the relaxed continuous linear least squared problem
+[scores,resnorm] = lsqlin(U1,dA1,[],[],[],[],zeros(cc,1),ones(cc,1),[],opts);    %solve the relaxed continuous linear least squared problem
+%[scores,resnorm] = lsqlin(U1,dA1,[],[],[],[],zeros(cc,1),[],l0,opts);
+
+
+
+
+
 %[scores,resnorm] = lsqlin(U1,dA1,[],[],[],[],zeros(cc,1),ones(cc,1),[],opts);    %solve the relaxed continuous linear least squared problem
 
 %mask = mask(:);

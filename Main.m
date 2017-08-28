@@ -6,7 +6,7 @@ clear all;
 
 
 mo = 1;
-for mo = 2:2
+for mo = 3:3
     mo
 switch mo
     case 1
@@ -18,27 +18,18 @@ switch mo
         Testnumber = 50:50:400;
         %Testnumber = 400;
     case 3
-        model = 'RECON1';
-        Testnumber = 100:100:800;
-    case 4
-        model = 'iAT_PLT_636';
-        Testnumber = 50:50:400;
-    case 5
         model = 'iAF692';
         Testnumber = 25:25:200;
         %Testnumber = 200;
-    case 6
+    case 4
         model = 'iHN637';
         Testnumber = 25:25:200;
-    case 7
+    case 5
         model = 'iIT341';
         Testnumber = 25:25:200;
-    case 8
+    case 6
         model = 'iAB_RBC_283';
         Testnumber = 25:25:200;
-    case 9
-        model = 'e_coli_core';
-        Testnumber = 5:5:40;
 end
 load(sprintf('data/%s.mat',model),'Model');
 S = Model.S;    %stoichiometric matrix S
@@ -50,8 +41,8 @@ sUS = Model.US;   %US with stoichiometry values
 unrnames = Model.unrnames;
 
 %% experiment begins
-numOfExperiment = 12;        %independent experiment numbers
-%method = 4;   %1: Greedy 2: CM 3: FM 4: MATBoost 5:HCN 6:HKatz 7:Submodular 8:HPLSF 9:SPHC 10:MDA 11:LR
+numOfExperiment = 1;        %independent experiment numbers
+%method = 4;   %1: Greedy 2: CM 3: FM 4: MATBoost 5:HCN 6:HKatz 7:Submodular 8:HPLSF 9:SPHC 10:MDA 11:LR 12:NN 13:BS
 %Method = [3,5,6,8,9]
 %Method = [8,9]
 Method = [4]
@@ -60,8 +51,7 @@ for md = 1:length(Method)
 method = Method(md)
 
 %Testnumber = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]  %number of test missing reactions
-Testnumber = [400]; validnumber = 100;
-%validnumber = Testnumber(4)
+Testnumber = [200];
 
 num_test = length(Testnumber);
 
@@ -73,8 +63,8 @@ for change_testnumber = 1:num_test
     testnumber = Testnumber(change_testnumber)
     threshold = testnumber;             % select the same number missing hyperlinks from test
     rseed = 2732*(testnumber^2-1);
-    poolobj = parpool(feature('numcores'));
-    parfor ith_experiment = 1:numOfExperiment
+    %poolobj = parpool(feature('numcores'));
+    for ith_experiment = 1:numOfExperiment
         ith_experiment
         
         rand('seed',rseed*(ith_experiment^2-1));   %to reproduce multiple exp results
@@ -86,12 +76,11 @@ for change_testnumber = 1:num_test
         trainnames = R(perm(testnumber+1:end));
         
 
-        %validr = trainr(:,1:validnumber);
-        %validnames = trainnames(1:validnumber);
-        validr = testr;
-        validnames = testnames;
-%         trainnames(1:validnumber) = [];
-%         trainr(:,1:validnumber) = [];
+%         validr = trainr(:,1:testnumber);
+%         validnames = trainnames(1:testnumber);
+%         trainnames(1:testnumber) = [];
+%         trainr(:,1:testnumber) = [];
+
         tmp = strcmp(repmat(trainnames,1,size(unrnames,2)),repmat(unrnames,size(trainnames,1),1));  %compare train with unr, save to a matrix
         check_repeat = find(sum(tmp)==0);     %keep those unr which never appears in the train reactions
         unrepeat_US = US(:,check_repeat);     %the unrepeated US, which excludes the train reactions
@@ -99,8 +88,8 @@ for change_testnumber = 1:num_test
         unrepeat_unrnames = unrnames(1,check_repeat);
         
         MUnames = unrepeat_unrnames;
-         valmatch = strcmp(repmat(validnames,1,size(MUnames,2)),repmat(MUnames,size(validnames,1),1));
-         valmatch = full(spones(sum(valmatch,1)));
+        test_labels = strcmp(repmat(testnames,1,size(MUnames,2)),repmat(MUnames,size(testnames,1),1));
+        test_labels = full(spones(sum(test_labels,1)));
         
         % METHOD
         match_all = strcmp(repmat(testnames,1,size(unrepeat_unrnames,2)),repmat(unrepeat_unrnames,size(testnames,1),1));
@@ -113,7 +102,7 @@ for change_testnumber = 1:num_test
             case 3
                 [Lambda,scores] = HLpredict(trainr,unrepeat_US,threshold,'FM',ith_experiment);
             case 4
-                [Lambda,scores] = HLpredict(trainr,unrepeat_US,threshold,'MATBoost',ith_experiment,valmatch);
+                [Lambda,scores] = HLpredict(trainr,unrepeat_US,threshold,'MATBoost',ith_experiment,test_labels);
             case 5
                 [Lambda,scores] = HLpredict(trainr,unrepeat_US,threshold,'HCN',ith_experiment);
             case 6
@@ -128,6 +117,10 @@ for change_testnumber = 1:num_test
                 [Lambda,scores] = HLpredict(trainr,unrepeat_US,threshold,'MDA',ith_experiment);
             case 11
                 [Lambda,scores] = HLpredict(trainr,unrepeat_US,threshold,'LR',ith_experiment);
+            case 12
+                [Lambda,scores] = HLpredict(trainr,unrepeat_US,threshold,'NN',ith_experiment);
+            case 13
+                [Lambda,scores] = HLpredict(trainr,unrepeat_US,threshold,'BS',ith_experiment);
         end
         MUnames = unrepeat_unrnames(Lambda');
         match = strcmp(repmat(testnames,1,size(MUnames,2)),repmat(MUnames,size(testnames,1),1));
@@ -154,7 +147,7 @@ for change_testnumber = 1:num_test
         AUC_of_Reaction_Prediction(change_testnumber,ith_experiment) = auc;
         
     end
-    delete(poolobj)
+    %delete(poolobj)
     
 end
 
@@ -174,6 +167,6 @@ std_match_num = std(Num_of_matched_reactions,0,2);
 %sound(sin(2*pi*25*(1:4000)/100));
 
 %% save results
-save(sprintf('data/result/%s_%d.mat',model,method),'average_match_num', 'std_match_num', 'average_guess_match_num', 'std_guess_match_num', 'average_AUC', 'std_AUC','average_recall','std_recall','average_precision','std_precision','Testnumber','threshold');
+%save(sprintf('data/result/%s_%d.mat',model,method),'average_match_num', 'std_match_num', 'average_guess_match_num', 'std_guess_match_num', 'average_AUC', 'std_AUC','average_recall','std_recall','average_precision','std_precision','Testnumber','threshold');
 end
 end

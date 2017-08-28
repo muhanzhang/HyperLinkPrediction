@@ -1,4 +1,4 @@
-function [I,scores,hlpredicted] = HLpredict(hltrain,hltest,num_prediction,method,ith_experiment,valmatch)
+function [I,scores,hlpredicted] = HLpredict(hltrain,hltest,num_prediction,method,ith_experiment,test_labels)
 %  Usage: for hyperlink predictions in hypernetworks, 
 %         call [I,scores] = HLpredict(hltrain,hltest,num_prediction) in default mode.
 %  --Input--
@@ -27,34 +27,38 @@ end
 
 A = hltrain * hltrain';   % project the hyperlinks into the vertex space to form the adjacency matrix (with weights)
 %A = A - diag(diag(A));   % remove self adjacency
-B = hltest * hltest';
-B = B - diag(diag(B));
-B = spones(B);    %the adjacency matrix of test hyperlinks, no use in hyperlink prediction, passed only for program consistency
 k = 8;
 
 switch method
     case 'MATBoost'
-        [I,scores] = MATBoost2(A,B,k,ith_experiment,hltest,num_prediction,10);
+        [I,scores] = MATBoost(hltrain,hltest,num_prediction,'cv',test_labels);
     case 'CM'
-        [I,scores] = MATBoost2(A,B,k,ith_experiment,hltest,num_prediction,1);
+        [I,scores] = MATBoost2(A,[],k,ith_experiment,hltest,num_prediction,1);
     case 'Greedy'
-        [I,scores] = GreedyMatch(A,B,k,ith_experiment,hltest,num_prediction);
+        [I,scores] = GreedyMatch(A,[],k,ith_experiment,hltest,num_prediction);
     case 'FM' 
         [I,scores] = FM_Match(hltrain, hltest,ones(size(hltest,2),1),k,ith_experiment,num_prediction);
     case 'HCN'
-        [I,scores] = HCN(A,B,hltest,num_prediction);
+        [I,scores] = HCN(A,hltest,num_prediction);
     case 'HKatz'
         [I,scores] = HKatz(A,hltrain,hltest,num_prediction);
     case 'Submodular'
-        [I,scores] = SubmodularMatch(A,B,k,ith_experiment,hltest,num_prediction);
+        [I,scores] = SubmodularMatch(A,[],k,ith_experiment,hltest,num_prediction);
     case 'HPLSF'
-        [I,scores] = HPLSF(A,B,k,ith_experiment,hltrain,hltest,num_prediction);
+        [I,scores] = HPLSF(A,k,ith_experiment,hltrain,hltest,num_prediction);
     case 'SPHC'
         [I,scores] = SPHC(hltrain,hltest,num_prediction);
     case 'MDA'
         [I,scores] = MDA(hltrain,hltest,num_prediction);
     case 'LR'
         [I,scores] = LR(hltrain,hltest,num_prediction);
+    case 'NN'
+        [I,scores] = NN(hltrain,hltest,num_prediction);
+    case 'BS'  % bayesian set
+        [I,scores] = BS(hltrain,hltest,num_prediction);
 end
 hlpredicted = hltest(:,I);
-
+if nargin == 6
+    [~,~,~,auc] = perfcurve(valmatch,scores,true);
+    auc
+end
