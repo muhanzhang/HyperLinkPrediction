@@ -1,5 +1,7 @@
 function [Lambda,scores] = BS(hltrain,hltest,num_prediction)
-%  Bayesian set
+%  Bayesian set.
+%  Please refer to paper "Ghahramani, Zoubin, and Katherine A. Heller,
+%  Bayesian sets. Advances in neural information processing systems. 2006."
 %
 %  *author: Muhan Zhang, Washington University in St. Louis
 %% 
@@ -8,7 +10,7 @@ function [Lambda,scores] = BS(hltrain,hltest,num_prediction)
 
 % prior
 c = 2;
-m = [hltrain, hltest];
+m = [hltrain,hltest];
 m = mean(m,2);
 alpha = c*m;
 beta = c*(1-m);
@@ -21,10 +23,5 @@ scores = hltest' * q;
 
 Lambda = zeros(col2,1);
 [~,I] = sort(scores,1,'descend');
-if num_prediction > 1
-    Lambda(I(1:num_prediction)) = 1;    %only keep hl with top scores
-    Lambda = logical(Lambda);
-else
-    Lambda(scores>num_prediction) = 1;
-    Lambda = logical(Lambda);
-end
+Lambda(I(1:num_prediction)) = 1;    % only keep hl with top scores
+Lambda = logical(Lambda);

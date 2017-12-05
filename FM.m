@@ -1,79 +1,78 @@
-function [dA,wdA] = FM(train,test,k,ith_experiment,SGD)
-%  Usage: for solving the matrix completion problem, 
-%         call [~,wdA] = FM(train,test,k,ith_experiment)
-%         to get the weighted completed matrix wdA
-%  --Input--
-%  -train: the incomplete matrix
-%  -test: no use in hl prediction (just for code consistency)
-%  -k: number of latent factors in matrix factorization
-%  -SGD: if SGD = 1, will use adaptive sgd for optimization (which can 
-%        output parameters w, v). Otherwise, will use MCMC (default).
-%  --Output--
-%  -dA: the unweighted completed matrix, no need to use this
-%  -wdA: the weighted completed matrix, which is what we want
+function [Lambda,scores] = FM(hltrain,hltest,k,ith_experiment,num_prediction)
+%  Train a Factorization Machine on hyperlink columns.
+%  Need executable "libFM" saved in data/FM_temp/
 %
 %  *author: Muhan Zhang, Washington University in St. Louis
 %%
-if nargin<3
-    k = 10;
-end
-
+[row,col] = size(hltrain);
+[row,col2] = size(hltest);
+datapath = strcat(pwd,'/data/FM_temp/');       % path of the data folder
 FMtrain = sprintf('FMtrain_exp%d',ith_experiment);
+
+%% generate positive training examples
+f1 = fopen(strcat(datapath,FMtrain),'w+');
+for i = 1:col
+    r = hltrain(:,i);
+    ind = find(r);
+    ind = [1,ind'-1];
+    fprintf(f1,strcat(num2str(ind),'\r\n'));
+end
+
+%% generate negative training examples (give up, because performance is better if not generating negative)
+Mul = 10;   % how many times more negative data
+for runthis = 1:0
+    for mul = 1:Mul
+        for i = 1:col
+            r = hltrain(:,i);
+            num_meta = sum(r);
+            while 1
+                c = zeros(row,1);
+                perm = randperm(size(hltrain,1));
+                c(perm(1:num_meta)) = 1;
+                %lia = ismember(c',hltest','rows');    % check if c in US
+                lia = 0;      %to save time
+                if lia == 0
+                    i;
+                    break
+                end
+            end
+            ind = [0,find(c)'-1];
+            fprintf(f1,strcat(num2str(ind),'\r\n'));
+        end
+    end
+    fclose(f1);
+end
+
+%% generate testing
 FMtest = sprintf('FMtest_exp%d',ith_experiment);
-FMconvert(train,FMtrain);      % call FMconvert.m to convert train, all to libfm format
-all = ones(size(train));         % to predict all the possible links' scores
-RC = FMconvert(all,FMtest);
-
-optmethod = 1;
-if nargin==5
-    optmethod = 2;
+f2 = fopen(strcat(datapath,FMtest),'w+');
+for i = 1:col2
+    r = hltest(:,i);
+    ind = find(r);
+    ind = [1,ind'-1];
+    fprintf(f2,strcat(num2str(ind),'\r\n'));
 end
+fclose(f2);
 
-switch optmethod
-    case 1
-        % to use MCMC optimization
-        cd data;
-        cmd = sprintf('./libFM -task r -train %s.libfm -test %s.libfm -dim "1,1,%d" -out out_%d.txt -iter 100',FMtrain,FMtest,k,ith_experiment);
-        system(cmd);    %run libFM
-        pred = dlmread(sprintf('out_%d.txt',ith_experiment));    %load the output file of libFM
-        delete(sprintf('%s.libfm',FMtrain));
-        delete(sprintf('%s.libfm',FMtest));
-        delete(FMtrain);
-        delete(FMtest);
-        delete(sprintf('out_%d.txt',ith_experiment));
-        cd ..;
-    case 2
-        % to use adaptive sgd with separate validation set
-        [r,c,v] = find(train);
-        rperm = randperm(length(r));
-        val = rperm(1:floor(0.1*length(r)));    % split the train and validation data
-        tra = rperm(floor(0.1*length(r))+1:end);
-        validation = zeros(size(train));        % reassemble the matrices
-        validation(sub2ind(size(validation),r(val),c(val))) = v(val);
-        train = zeros(size(train));
-        train(sub2ind(size(train),r(tra),c(tra))) = v(tra);
-        FMconvert(train,FMtrain);
-        FMvalidation = sprintf('FMvalidation_exp%d',ith_experiment);
-        FMconvert(validation,FMvalidation);
-        cd data;
-        cmd = sprintf('./libFM -task r -train %s.libfm -test %s.libfm -validation %s.libfm -dim "1,1,%d" -out out_%d.txt -iter 100 -method sgda -learn_rate 0.001 -init_stdev 0.01',FMtrain,FMtest,FMvalidation,k,ith_experiment);
-        system(cmd);                            % run libFM
-        pred = dlmread(sprintf('out_%d.txt',ith_experiment));    % load the output file of libFM
-        delete(sprintf('out_%d.txt',ith_experiment));
-        delete(sprintf('%s.libfm',FMtrain));
-        delete(sprintf('%s.libfm',FMtest));
-        delete(sprintf('%s.libfm',FMvalidation));
-        delete(FMtrain);
-        delete(FMtest);
-        delete(FMvalidation);
-        cd ..;
-end
+%% perform FM, need executable "libFM" saved in data/FM_temp/
+cd data/FM_temp;
+cmd = sprintf('python processFM.py %s',FMtrain);
+system(cmd);
+cmd = sprintf('python processFM.py %s',FMtest);
+system(cmd);
+cmd = sprintf('./libFM -task c -train %s.libfm -test %s.libfm -dim "1,1,%d" -out out_%d.txt -iter 1000',FMtrain,FMtest,k,ith_experiment);
+evalc('system(cmd);');    % run libFM in silence mode
+pred = load(sprintf('out_%d.txt',ith_experiment));    % load the predictions of libFM
+delete(FMtrain);  % delete temporay files
+delete(FMtest);
+delete(sprintf('out_%d.txt',ith_experiment));
+delete(sprintf('%s.libfm',FMtrain));
+delete(sprintf('%s.libfm',FMtest));
+cd ../..;
 
-%%
-sim = zeros(size(train));
-sim(sub2ind(size(sim),RC(:,1),RC(:,2))) = pred;    % assign FM predictions to sim
-dsim = diag(diag(sim));     % diagonal elements of sim
-sim = sparse((sim + sim'- dsim));  % NOTE: (sim + sim' - dsim) keeps diagonal elements
+scores = pred;
 
-[~,dA,wdA] = CalcAUC(train,test,sim);
-end
+Lambda = zeros(col2,1);
+[~,I] = sort(scores,1,'descend');
+Lambda(I(1:num_prediction)) = 1;    % only keep hl with top scores
+Lambda = logical(Lambda);

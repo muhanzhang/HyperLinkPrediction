@@ -1,7 +1,7 @@
 function [Lambda,scores] = NN(hltrain,hltest,num_prediction)
-%  Logistic Regression for hl prediction, needs to install Liblinear package.
+%  Neural network for hl prediction.
 %  Directly use columns of incidence matrix as positive training examples, and 
-%  generate random columns as negative examples to train a logitstic regression model.
+%  generate random columns as negative examples to train a neural network.
 %
 %  *author: Muhan Zhang, Washington University in St. Louis
 %%
@@ -39,4 +39,3 @@ Lambda = zeros(size(scores, 1), 1);
 [~,I] = sort(scores,1,'descend');
 Lambda(I(1:num_prediction)) = 1;    % only keep hl with top scores
 Lambda = logical(Lambda);
-%nnz(Lambda'.*Ulabels)

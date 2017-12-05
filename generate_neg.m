@@ -15,21 +15,21 @@ if nargin < 2
 end
 neg = zeros(row,col*mul);
 for j = 1:mul
-for i = 1:col
-    r = pos(:,i);
-    num_meta = nnz(r);
-    while 1
-        c = zeros(row,1);
-        perm = randperm(row);
-        c(perm(1:num_meta)) = 1;
-        %lia = ismember(c',pos','rows');    %check if c in US
-        lia = 0;      %to save time
-        if lia == 0
-            i;
-            break
+    for i = 1:col
+        r = pos(:,i);
+        num_meta = nnz(r);
+        while 1
+            c = zeros(row,1);
+            perm = randperm(row);
+            c(perm(1:num_meta)) = 1;
+            %lia = ismember(c',pos','rows');    %check if c in US
+            lia = 0;      %to save time
+            if lia == 0
+                i;
+                break
+            end
         end
+        neg(:,i) = c;
     end
-    neg(:,i) = c;
-end
 end
 

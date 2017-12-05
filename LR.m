@@ -5,7 +5,7 @@ function [Lambda,scores] = LR(hltrain,hltest,num_prediction)
 %
 %  *author: Muhan Zhang, Washington University in St. Louis
 %% 
-addpath(genpath('/project/tantra/mh/software/liblinear-2.1/matlab'))
+addpath(genpath('software/liblinear-2.1/matlab'))
 [row,col] = size(hltrain);
 [row,col2] = size(hltest);
 
@@ -24,10 +24,5 @@ scores = scores(:, l1);
 
 Lambda = zeros(col2,1);
 [~,I] = sort(scores,1,'descend');
-if num_prediction > 1
-    Lambda(I(1:num_prediction)) = 1;    %only keep hl with top scores
-    Lambda = logical(Lambda);
-else
-    Lambda(scores>num_prediction) = 1;
-    Lambda = logical(Lambda);
-end
+Lambda(I(1:num_prediction)) = 1;    %only keep hl with top scores
+Lambda = logical(Lambda);
