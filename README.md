@@ -19,7 +19,7 @@ How to run
 
 The file "Main_meta.m" is the main program for running the metabolic reaction prediction experiments. The file "Main_dish" is for dish prediction. Please change experimental settings inside these two files.
 
-The folder "data/" contains the preprocessed data used in the experiments. They are "iAB_RBC_283.mat  iAF1260b.mat  iAF692.mat  iHN637.mat  iIT341.mat  iJO1366.mat" (each is a metabolic network model), and "chuancai.txt  yuecai.txt" (collections of Sichuan and Cantonese recipes). The folder "utils/" contains some preprocessing scripts, which may be useful if you want to experiment on more datasets.
+The folder "data/" contains the preprocessed data used in the experiments. They are: iAB_RBC_283.mat, iAF1260b.mat, iAF692.mat, iHN637.mat, iIT341.mat and iJO1366.mat (each is a metabolic network model), and chuancai.txt, yuecai.txt (collections of Sichuan and Cantonese recipes). The folder "utils/" contains some preprocessing scripts, which may be useful if you want to experiment on more datasets.
 
 By default, "Main_meta.m" will save results in "result/". There is a "Meta_Plot.m" in "utils/" which plots figures according to the results.
 
