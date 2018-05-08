@@ -8,7 +8,7 @@ A hyperlink relaxes the restriction in traditional link prediction that two node
 
 This toolbox contains the source code of our paper:
 
-> M. Zhang,  Z. Cui,  S. Jiang,  and Y. Chen,  Beyond Link Prediction: Predicting Hyperlinks in Adjacency Space,  Proc. AAAI Conference on Artificial Intelligence (AAAI-18). [\[Preprint\]](http://www.cse.wustl.edu/~muhan/papers/AAAI_2018_Hyperlink.pdf)
+> M. Zhang,  Z. Cui,  S. Jiang,  and Y. Chen,  Beyond Link Prediction: Predicting Hyperlinks in Adjacency Space,  Proc. AAAI Conference on Artificial Intelligence (AAAI-18). [\[PDF\]](http://www.cse.wustl.edu/~muhan/papers/AAAI_2018_Hyperlink.pdf)
 
 which studies the hyperlink prediction problem. We proposed a novel Coordinated Matrix Minimization (CMM) algorithm, which predicts hyperlinks in the vertex adjacency space and achieves state-of-the-art performance on two tasks: recipe prediction and metabolic reaction prediction. This toolbox also includes implementations of various hyperlink prediction baselines.
 
