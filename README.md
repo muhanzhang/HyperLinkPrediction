@@ -51,13 +51,12 @@ Reference
 
 If you find the code useful, please cite our paper:
 
-    @paper{AAAI1817136,
-        author = {Muhan Zhang and Zhicheng Cui and Shali Jiang and Yixin Chen},
-        title = {Beyond Link Prediction: Predicting Hyperlinks in Adjacency Space},
-        conference = {AAAI Conference on Artificial Intelligence},
-        year = {2018},
-        keywords = {link prediction; hypergraph; hyperlink; EM; metabolic network},
-        url = {https://www.aaai.org/ocs/index.php/AAAI/AAAI18/paper/view/17136/16754}
+    @inproceedings{zhang2018beyond,
+        title={Beyond Link Prediction: Predicting Hyperlinks in Adjacency Space.},
+        author={Zhang, Muhan and Cui, Zhicheng and Jiang, Shali and Chen, Yixin},
+        booktitle={AAAI},
+        pages={4430--4437},
+        year={2018}
     }
 
 Muhan Zhang, muhan@wustl.edu
